@@ -182,6 +182,9 @@ Value *apply(Value *function, Value *args){
   {
     eval(function->cl.functionCode, function->cl.frame);
   }
+  if (function->type == PRIMITIVE_TYPE) {
+    return (function->pf)(args);
+  }
   //Construct a new frame whose parent frame is the environment 
   //stored in the closure.
   Frame *newFrame = talloc(sizeof(Frame));
@@ -262,9 +265,9 @@ void bind(char *name, Value *(*function)(struct Value *), Frame *frame) {
     value->type = PRIMITIVE_TYPE;
     value->pf = function;
     Value *binding = makeNull();
-    frame->bindings = cons(cons(binding, value), frame->bindings);
     binding->type = SYMBOL_TYPE;
     binding->s = name;
+    frame->bindings = cons(cons(binding, value), frame->bindings);
 }
 
 // Value *primitiveAdd(Value *args, Frame *frame){
@@ -331,9 +334,6 @@ Value *eval(Value *tree, Frame *frame)
       {
         evaluationError("symbol not found.\n");
       }
-      if (found->type == PRIMITIVE_TYPE){
-        return found(val);
-      }
       return found;
     }
     case CONS_TYPE:
@@ -363,10 +363,10 @@ Value *eval(Value *tree, Frame *frame)
       // {
       //   return evalAdd(cdr(val), frame);
       // }
-      if (!strcmp(car(val)->s, "car")) 
-      {
-        return eval(val, frame);
-      }
+      // if (!strcmp(car(val)->s, "car")) 
+      // {
+      //   return eval(val, frame);
+      // }
       else
       {
         // If not a special form, evaluate the first, evaluate the args, then
