@@ -47,7 +47,9 @@ void printTokenHelp(Value* tree)
       break;
     case VOID_TYPE :
       break;
-    
+    case NULL_TYPE :
+      printf("()");
+      break;
     default :
       evaluationError("Print error");
   }
@@ -319,16 +321,17 @@ Value *primitiveAdd(Value *args){
   double sum = 0;
   bool isDouble = 0;
   Value* cur = args;
+  
   while (cur->type != NULL_TYPE){
     
     if (car(cur)->type == DOUBLE_TYPE)
     {
       isDouble = 1;
       sum += car(cur)->d;
-    } else
-    {
-      assert(car(cur)->type == INT_TYPE);
+    } else if (car(cur)->type == INT_TYPE){
       sum += car(cur)->i;
+    } else {
+      evaluationError("Evaluation Error: adding not a number");
     }
     cur = cdr(cur);
   }
