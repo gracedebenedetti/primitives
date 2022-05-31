@@ -19,10 +19,10 @@ void evaluationError(char *errorMessage)
   texit(1);
 }
 
-// tree should just be a single cell
-void print(Value* tree)
+void printTokenHelp(Value* tree)
 {
-  switch (tree->type) //segfault for let04
+  assert(tree->type != CONS_TYPE && "Error -- unexpected call to printTokenHelp()");
+  switch (tree->type) 
   {
     case INT_TYPE :
       printf("%d", tree->i);
@@ -47,11 +47,51 @@ void print(Value* tree)
       break;
     case VOID_TYPE :
       break;
-    case CONS_TYPE :
-      printTree(tree);
-      break;
+    
     default :
       evaluationError("Print error");
+  }
+}
+
+
+
+void printConsHelp(Value *tree)
+{
+  printf("(");
+  while (tree->type != NULL_TYPE)
+  {
+    if (tree->type == CONS_TYPE && car(tree)->type == CONS_TYPE)
+    {
+      printConsHelp(car(tree));
+    }
+    else
+    {
+      printTokenHelp(car(tree));
+      if (cdr(tree)->type != NULL_TYPE && cdr(tree)->type != CONS_TYPE)
+      {
+        printf(" . ");
+        printTokenHelp(cdr(tree));
+        break;
+      }
+    }
+    if (cdr(tree)->type != NULL_TYPE)
+    {
+      printf(" ");
+    }
+    tree = cdr(tree);
+  }
+  printf(")");
+}
+
+// tree should just be a single cell
+void print(Value* tree)
+{
+  if (tree->type == CONS_TYPE)
+  {
+    printConsHelp(tree);
+  } else
+  {
+    printTokenHelp(tree);
   }
 }
 
@@ -251,7 +291,7 @@ Value *evalLambda(Value *args, Frame *frame){
     closure->cl.paramNames = makeNull();
   } else
   {
-    assert(car(args)->type == CONS_TYPE && "Error, lambda parameter tree is weirdly formatted\n");
+    assert(car(args)->type == CONS_TYPE && "Error, lambda parameter tree is wrongly formatted\n");
     closure->cl.paramNames = car(args);
   }
   closure->cl.functionCode = cdr(args);
@@ -259,30 +299,85 @@ Value *evalLambda(Value *args, Frame *frame){
   return closure;
 }
 
-void bind(char *name, Value *(*function)(struct Value *), Frame *frame) {
+void bind(char *name, Value *(*function)(Value *), Frame *frame) {
     // Add primitive functions to top-level bindings list
-    Value *value = talloc(sizeof(Value));
-    value->type = PRIMITIVE_TYPE;
-    value->pf = function;
-    Value *binding = makeNull();
-    binding->type = SYMBOL_TYPE;
-    binding->s = name;
-    frame->bindings = cons(cons(binding, value), frame->bindings);
+  Value* symbol = (Value*)talloc(sizeof(Value));
+  symbol->type = SYMBOL_TYPE;
+  symbol->s = name;
+
+  Value* value = (Value*)talloc(sizeof(Value));
+  value->type = PRIMITIVE_TYPE;
+  value->pf = function;
+
+  Value* list_2 = cons(value, makeNull());
+  Value* list_1 = cons(symbol, list_2);
+
+  frame->bindings = cons(list_1, frame->bindings);
 }
 
-// Value *primitiveAdd(Value *args, Frame *frame){
-//   int sum = 0;
-//   while (car(args)->type != NULL_TYPE){
-//     sum = sum + eval(car(args), frame)->i;
-//     args = cdr(args);
-//   }
-// }
+Value *primitiveAdd(Value *args){
+  double sum = 0;
+  bool isDouble = 0;
+  Value* cur = args;
+  while (cur->type != NULL_TYPE){
+    
+    if (car(cur)->type == DOUBLE_TYPE)
+    {
+      isDouble = 1;
+      sum += car(cur)->d;
+    } else
+    {
+      assert(car(cur)->type == INT_TYPE);
+      sum += car(cur)->i;
+    }
+    cur = cdr(cur);
+  }
+  
+  Value* ret = makeNull();
+  if (isDouble)
+  {
+    ret->type = DOUBLE_TYPE;
+    ret->d = sum;
+  } else
+  {
+    ret->type = INT_TYPE;
+    ret->i = (int)sum;
+  }
+  return ret;
+}
 
-// Value *primitiveNull(Value *args){
-//   if (treeLength(args) != 1) {
-//     evaluationError("Evaluation error: more or less than 1 argument");
-//   }
-// }
+Value *primitiveNull(Value *args){
+  if (treeLength(args) != 1) {
+    evaluationError("Evaluation error: more or less than 1 argument");
+  }
+  Value* ret = (Value*)talloc(sizeof(Value));
+  ret->type = BOOL_TYPE;
+  Value* argument = car(args); // if argument is a cons_type, then check to see if it points to an empty list
+                                // (if so, return true). otherwise, check to see if it's null (if so, return true).
+                                // if neither, return false;
+  if (argument->type == CONS_TYPE)
+  {
+    if (car(argument)->type == NULL_TYPE)
+    {
+      ret->i = 1;
+    } else
+    {
+      ret->i = 0;
+    }
+  } else
+  {
+    if (argument->type == NULL_TYPE)
+    {
+      ret->i = 1;
+    } else
+    {
+      ret->i = 0;
+    }
+  }
+
+  
+  return ret;
+}
 
 Value *primitiveCar(Value *args){
   if (treeLength(args) != 1) {
@@ -308,7 +403,7 @@ Value *primitiveCons(Value *args){
   if (treeLength(args) != 2) {
     evaluationError("Evaluation error: more or less than 2 arguments");
   }
-  return cons(car(cdr(args)), car(args));
+  return cons(car(args), car(cdr(args)));
 }
 
 Value *eval(Value *tree, Frame *frame)
@@ -361,7 +456,7 @@ Value *eval(Value *tree, Frame *frame)
       }
       // if (!strcmp(car(val)->s, "+"))
       // {
-      //   return evalAdd(cdr(val), frame);
+      //   return primitiveAdd(cdr(val), frame);
       // }
       // if (!strcmp(car(val)->s, "car")) 
       // {
@@ -395,8 +490,8 @@ void interpret(Value *tree)
   Value *curr = tree;
   while (curr->type != NULL_TYPE)
   {
-    //bind("+", primitiveAdd, frame);
-    //bind("null?", primitiveNull, frame);
+    bind("+", primitiveAdd, frame);
+    bind("null?", primitiveNull, frame);
     bind("car", primitiveCar, frame);
     bind("cdr", primitiveCdr, frame);
     bind("cons", primitiveCons, frame);
