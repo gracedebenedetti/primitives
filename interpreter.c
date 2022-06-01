@@ -36,6 +36,9 @@ void printTokenHelp(Value* tree)
     case SYMBOL_TYPE :
       printf("%s", tree->s);
       break;
+    case NULL_TYPE :
+      printf ("()");
+      break;
     case BOOL_TYPE :
       if (tree->i == 1)
       {
@@ -333,10 +336,10 @@ Value *primitiveAdd(Value *args){
     {
       isDouble = 1;
       sum += car(cur)->d;
-    } else
-    {
-      assert(car(cur)->type == INT_TYPE);
+    } else if (car(cur)->type == INT_TYPE){
       sum += car(cur)->i;
+    } else {
+      evaluationError("Evaluation Error: Adding non-numbers");
     }
     cur = cdr(cur);
   }
