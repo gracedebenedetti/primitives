@@ -163,7 +163,7 @@ Value *evalQuote(Value *tree){
   if (tree->type == NULL_TYPE){
     evaluationError("Error: Quote args");
   }
-  return tree;
+  return car(tree);
 }
 
 Value *evalIf(Value *args, Frame *frame)
