@@ -57,7 +57,7 @@ void printTokenHelp(Value* tree)
 
 void printConsHelp(Value *tree)
 {
-  printf("(");
+  //printf("(");
   while (tree->type != NULL_TYPE)
   {
     if (tree->type == CONS_TYPE && car(tree)->type == CONS_TYPE)
@@ -80,7 +80,7 @@ void printConsHelp(Value *tree)
     }
     tree = cdr(tree);
   }
-  printf(")");
+  //printf(")");
 }
 
 // tree should just be a single cell
@@ -163,7 +163,7 @@ Value *evalQuote(Value *tree){
   if (tree->type == NULL_TYPE){
     evaluationError("Error: Quote args");
   }
-  return tree;
+  return car(tree);
 }
 
 Value *evalIf(Value *args, Frame *frame)
