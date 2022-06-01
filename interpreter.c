@@ -327,18 +327,16 @@ Value *primitiveAdd(Value *args){
   double sum = 0;
   bool isDouble = 0;
   Value* cur = args;
-  if (treeLength(args) < 1){
-    evaluationError("Evaluation Error: no args for add");
-  }
   while (cur->type != NULL_TYPE){
+    
     if (car(cur)->type == DOUBLE_TYPE)
     {
       isDouble = 1;
       sum += car(cur)->d;
-    } else if (car(cur)->type == INT_TYPE) {
+    } else
+    {
+      assert(car(cur)->type == INT_TYPE);
       sum += car(cur)->i;
-    } else {
-      evaluationError("Evaluation Error: Adding non-numbers");
     }
     cur = cdr(cur);
   }
@@ -435,7 +433,7 @@ Value *eval(Value *tree, Frame *frame)
     case SYMBOL_TYPE:
     {               // this means that the whole program is just a variable name, so just return the value of the variable.
       Value* found = lookUpSymbol(val, frame);
-      if (found->type == NULL_TYPE)
+      if (found == NULL)
       {
         evaluationError("symbol not found.\n");
       }
