@@ -239,13 +239,14 @@ Value *evalEach(Value *args, Frame *frame){
 }
 
 Value *apply(Value *function, Value *args){
+  if (function->type == PRIMITIVE_TYPE) {
+    return (function->pf)(args);
+  }
   if (args->type == NULL_TYPE)
   {
     eval(function->cl.functionCode, function->cl.frame);
   }
-  if (function->type == PRIMITIVE_TYPE) {
-    return (function->pf)(args);
-  }
+  
   //Construct a new frame whose parent frame is the environment 
   //stored in the closure.
   Frame *newFrame = talloc(sizeof(Frame));
