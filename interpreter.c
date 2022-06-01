@@ -31,7 +31,7 @@ void printTokenHelp(Value* tree)
       printf("%lf",tree->d);
       break;
     case STR_TYPE :
-      printf("%s",tree->s);
+      printf("\"%s\"",tree->s);
       break;
     case SYMBOL_TYPE :
       printf("%s", tree->s);
@@ -120,6 +120,16 @@ int treeLength(Value *tree)
   return len;
 }
 
+Value* getBottomLeftChild(Value* tree)
+{
+  assert(tree != NULL && "Error: null tree/child");
+  if (tree->type == CONS_TYPE)
+  {
+    return getBottomLeftChild(car(tree));
+  }
+  return tree;
+}
+
 // This method looks up the given symbol within the bindings to see if it is a bound variable
 Value *lookUpSymbol(Value *symbol, Frame *frame)
 {
@@ -147,7 +157,7 @@ Value *lookUpSymbol(Value *symbol, Frame *frame)
         return lookUpSymbol(boundValue, frame->parent);
       } else if (boundValue->type == CONS_TYPE)
       {
-        if (car(boundValue)->type == INT_TYPE)
+        if (getBottomLeftChild(boundValue)->type == INT_TYPE || getBottomLeftChild(boundValue)->type == STR_TYPE || getBottomLeftChild(boundValue)->type == BOOL_TYPE || getBottomLeftChild(boundValue)->type == DOUBLE_TYPE)
         {
           return boundValue;
         }
