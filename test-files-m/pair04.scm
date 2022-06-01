@@ -1,1 +1,1 @@
-(quote (a b c))
+(car (quote (a b c)))

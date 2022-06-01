@@ -33,6 +33,9 @@ void printTokenHelp(Value* tree)
     case STR_TYPE :
       printf("%s",tree->s);
       break;
+    case SYMBOL_TYPE :
+      printf("%s", tree->s);
+      break;
     case BOOL_TYPE :
       if (tree->i == 1)
       {
@@ -57,7 +60,7 @@ void printTokenHelp(Value* tree)
 
 void printConsHelp(Value *tree)
 {
-  //printf("(");
+  printf("(");
   while (tree->type != NULL_TYPE)
   {
     if (tree->type == CONS_TYPE && car(tree)->type == CONS_TYPE)
@@ -80,7 +83,7 @@ void printConsHelp(Value *tree)
     }
     tree = cdr(tree);
   }
-  //printf(")");
+  printf(")");
 }
 
 // tree should just be a single cell
