@@ -144,6 +144,10 @@ Value *lookUpSymbol(Value *symbol, Frame *frame)
         return lookUpSymbol(boundValue, frame->parent);
       } else if (boundValue->type == CONS_TYPE)
       {
+        if (car(boundValue)->type == INT_TYPE)
+        {
+          return boundValue;
+        }
         return eval(cdr(pairList), frame);
       }
       return boundValue;
@@ -440,7 +444,8 @@ Value *eval(Value *tree, Frame *frame)
     case CONS_TYPE:
       if (!strcmp(car(val)->s, "if"))
       {
-        return evalIf(cdr(val), frame);
+        Value* nxt = cdr(val);
+        return evalIf(nxt, frame);
       }
       if (!strcmp(car(val)->s, "quote"))
       {
