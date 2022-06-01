@@ -156,16 +156,14 @@ Value *lookUpSymbol(Value *symbol, Frame *frame)
 
 
 Value *evalQuote(Value *tree){
-  assert(tree->type == CONS_TYPE);
-  assert(car(tree)->type == CONS_TYPE);
-  Value* args = cdr(car(tree));
-  if (treeLength(args) != 1){
+  
+  if (treeLength(tree) != 1){
     evaluationError("Error: too many args in quote");
   }
-  if (args->type == NULL_TYPE){
+  if (tree->type == NULL_TYPE){
     evaluationError("Error: Quote args");
   }
-  return args;
+  return tree;
 }
 
 Value *evalIf(Value *args, Frame *frame)
